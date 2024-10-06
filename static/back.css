@@ -1,0 +1,34 @@
+
+
+/* Reset default styles and ensure box sizing includes borders and padding */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Style the navigation bar */
+.navbar {
+    background-color: #581B98; /* Set your desired background color */
+    padding: 10px; /* Adjust padding as needed */
+}
+
+/* Style the list items and make them display in a row */
+.navbar__list {
+    list-style-type: none;
+    display: flex;
+    justify-content: space-around; /* Adjust as needed */
+}
+
+/* Style each individual item */
+.navbar__item {
+    margin: 0 10px; /* Adjust spacing between items */
+}
+
+/* Style the links */
+.navbar__item a {
+    text-decoration: none;
+    color: white; /* Set your desired text color */
+    font-weight: bold;
+    font-size: 16px; /* Set your desired font size */
+}

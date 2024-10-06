@@ -1,0 +1,411 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href={%static "chat.css" %}>
+    <link rel="stylesheet" href={%static "style.css" %}>
+    <link rel="stylesheet" href={%static "typing.css" %}>
+    <link rel="stylesheet" href={%static "back.css" %}>
+    <link rel="stylesheet" href={%static "beep.css" %}>
+    <link rel="stylesheet" href={%static "back2.css" %}>
+    <!-- Add this line to include the FontAwesome library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    <title>Document</title>
+    <style>
+        /* Add this style to make the image round */
+        .chatbox__image--header img {
+            border-radius: 50%;
+            width: 100%; /* Ensure the image takes the full width of its container */
+            height: auto; /* Maintain the aspect ratio of the image */
+        }
+        .speaker {
+            cursor: pointer;
+            color: white; /* Set color to white */
+            font-size: 24px; /* Set font size to 24px */
+        }
+
+        .speaker-on {
+            color: white; /* Change color for the "speaker on" state */
+        }
+
+        .speaker-off {
+            color: white; /* Change color for the "speaker off" state */
+            /* Add a line-through for the "speaker off" state */
+        }
+        .suggestion-area {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-left: 10px; /* Adjust the left margin as needed */
+        }
+        
+        /* Style for individual suggestion items */
+        .suggestion-item {
+            padding: 5px;
+            cursor: pointer;
+            background-color: #f2f2f2;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+    </style>
+</head>
+<body>
+<nav class="navbar">
+        <ul class="navbar__list">
+            <li class="navbar__item"><a href="index.html">Home</a></li>
+            <li class="navbar__item"><a href="NRSC.html">About Us</a></li>
+            <li class="navbar__item"><a href="Application_Sectors.html">Application Sectors</a></li>
+            <li class="navbar__item"><a href="bhuvan_collectors.html">Administartion of Justice</a></li>
+            <li class="navbar__item"><a href="search.html">Search</a></li>
+            <li class="navbar__item"><a href="store.html">National Mission</a></li>
+            <li class="navbar__item"><a href="contact.html">Access to Justice</a></li>
+            <li class="navbar__item"><a href="newsletter.html">Newsletter</a></li>
+            
+            <!-- Add more options as needed -->
+        </ul>
+
+    </nav>
+ 
+    <div class="chatbox">
+        <div class="chatbox__support">
+            <div class="chatbox__header">
+                <div class="chatbox__image--header" style="margin-right: 10px;" >
+                    <img src={%static "image/image4.png"%} alt="image">
+                </div>
+                <div class="header-text" style="margin: auto;">
+                    CourtConnect!
+                </div>
+                
+                <select id="language" name="language" style="margin-left: 10px;">
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="ta">Tamil</option>
+                    <!-- Add more language options as needed -->
+                </select>
+            </div>
+            <div class="chatbox__messages">
+                <div>
+                   
+                    <div class="messages__item messages__item--typing">
+                        <span <h>Hello I am CourtConnect</h> </span>
+                        
+                    </div>
+                </div>
+                <!-- Your chat messages go here -->
+            </div>
+            <div class="chatbox__footer">
+                
+                <form method="post" id="textForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="text" id="textInput" class="textInput" style="color:white;background : linear-gradient(268.91deg, #010280 -2.14%, #000133 99.69%);"placeholder="Write a message..." oninput="suggestQuestions()">
+                    <button type="button" id="sendTextButton" style="background: none; border: none;padding-left: 10px;">
+                        <i class="fas fa-paper-plane"style="color: white;font-size: 24px;"></i>
+                    </button>
+                </form>
+                <audio id="startSound" src={% static "start.mp3" %}></audio>
+                <audio id="stopSound" src={% static "start.mp3" %}></audio>
+                <!-- Your chat input field goes here -->
+                <form method="post" id="sound" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="record-button" style="cursor: pointer;display: inline-block;padding-right: 18px;">
+                    <i id="recordButton" class="fas fa-microphone" style="cursor: pointer;color: white;font-size: 24px;"></i>
+                    </div>
+                    <input type="file" name="audio" accept="audio/*" style="display:none;" id="audioInput"/>
+                    <span></span>
+                    <i class="speaker speaker-on" onclick="toggleSpeaker()">
+                        <i class="fas fa-volume-up"></i> <!-- Speaker on icon -->
+                        <i class="fas fa-volume-mute speaker-off" style="display: none;"></i> <!-- Slashed speaker off icon -->
+                    </i>
+                        
+                    <input type="submit" value="Send" style="display:none;">
+                </form>
+            
+            </div>
+            <div class="suggestion-area" id="suggestionArea"></div>
+        </div>
+        <div class="chatbox__button">
+            <button>Branch-1</button>
+        </div>
+    </div>
+    <script>
+        async function suggestQuestions() {
+          const textInput = document.getElementById('textInput').value.trim();
+        
+          if (textInput === '') {
+            clear();
+            return;
+          }
+        
+          // Simulate an asynchronous request to a suggestion API
+          const suggestions = await fetchSuggestions(textInput);
+        
+          // Display suggestions
+          displaySuggestions(suggestions.slice(0, 4));
+        }
+        
+        async function fetchSuggestions(textInput) {
+          // Simulate fetching suggestions from a server/API
+          // In a real-world scenario, you would make an asynchronous request to a server
+          // and get a list of suggested questions based on the user input.
+          // For simplicity, let's assume a static list of suggestions.
+          const staticSuggestions = [
+'How does the Department of Justice contribute to the development of infrastructure facilities for the judiciary?', 'What is the role of Fast Track Special Courts in the judicial system as per the Department of Justice?', 'How does the eCourts Project facilitate the computerization of courts across the country?', 'In what ways does the Department of Justice provide legal aid to the poor and ensure access to justice?', 'How does the National Judicial Data Grid (NJDG) contribute to managing the pendency of cases?', 'What is the procedure for paying fines for traffic violations as per the Department of Justice?', 'How can one access the live streaming of court cases?', 'What steps should be followed for eFiling and ePayment in the judicial system?', 'What information is available about the functioning of Fast Track Courts?', 'How can one download and use the eCourts Services Mobile App?', 'How can citizens avail of Tele Law Services through the Department of Justice?', 'How can one check the current status of a case through the Department of Justice?'
+
+
+];
+          
+        
+          // Filter suggestions based on the current user input
+          const filteredSuggestions = staticSuggestions.filter(suggestion =>
+            suggestion.toLowerCase().includes(textInput.toLowerCase())
+          );
+        
+          return filteredSuggestions;
+        }
+        
+        function displaySuggestions(suggestions) {
+            const suggestionArea = document.getElementById('suggestionArea');
+            suggestionArea.innerHTML = '';
+
+            suggestions.forEach(suggestion => {
+                const suggestionItem = document.createElement('div');
+                suggestionItem.classList.add('suggestion-item');
+                suggestionItem.textContent = suggestion;
+                suggestionItem.addEventListener('click', () => insertSuggestion(suggestion));
+                suggestionArea.appendChild(suggestionItem);
+            });
+        }
+        
+        function insertSuggestion(suggestion) {
+          const textInputElement = document.getElementById('textInput');
+          textInputElement.value = suggestion;
+          clearSuggestions();
+        }
+        
+        function clearSuggestions() {
+          const suggestionListElement = document.getElementById('suggestionList');
+          suggestionListElement.innerHTML = '';
+        }
+        function clear(){
+            const suggestionArea = document.getElementById('suggestionArea');
+            suggestionArea.innerHTML = ''
+        }
+        
+
+        let isSpeakerOn = true;
+
+        function toggleSpeaker() {
+            const speakerIcon = document.querySelector('.speaker');
+            const speakerOnIcon = document.querySelector('.fa-volume-up');
+            const speakerOffIcon = document.querySelector('.fa-volume-mute');
+
+            isSpeakerOn = !isSpeakerOn;
+
+            if (isSpeakerOn) {
+                speakerIcon.classList.remove('speaker-off');
+                speakerOnIcon.style.display = 'inline';
+                speakerOffIcon.style.display = 'none';
+                isSpeakerOn=true;
+                // Enable voice output here
+            } else {
+                speakerIcon.classList.add('speaker-off');
+                speakerOnIcon.style.display = 'none';
+                speakerOffIcon.style.display = 'inline';
+                isSpeakerOn=false;
+                // Disable voice output here
+            }
+        }
+    
+        var lang='en';
+        const recordButton = document.getElementById('recordButton');
+ 
+        recordButton.addEventListener('click', startRecording);
+
+        function startRecording() {
+            const startSound = document.getElementById('startSound');
+            const stopSound = document.getElementById('stopSound');
+            startSound.play();
+
+            const rippleElement = document.createElement('div');
+            rippleElement.className = 'ripple';
+        
+            // Append the ripple element to the record button
+            document.querySelector('.record-button').appendChild(rippleElement);
+        
+            rippleElement.classList.add('animate-ripple');
+   
+         
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    const mediaRecorder = new MediaRecorder(stream);
+                    const audioChunks = [];
+        
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+        
+                    mediaRecorder.onstop = () => {
+                        
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        sendAudioData(audioBlob);
+                        stopSound.play();
+                        rippleElement.remove();
+                    };
+        
+                    mediaRecorder.start();
+        
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 5000); // Record for 5 seconds (adjust as needed)
+                })
+                .catch(error => {
+                    
+                    console.error('Error accessing microphone:', error);
+                });
+        }
+        
+        function sendAudioData(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob);
+            const languageSelect = document.getElementById('language');
+            const selectedLanguage = languageSelect ? languageSelect.value : 'en';
+            lang=selectedLanguage;
+            
+    // Append language to form data
+            formData.append('lang', selectedLanguage);
+        
+            // Access the CSRF token input
+            const csrfTokenInput = document.getElementsByName('csrfmiddlewaretoken')[0];
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+        
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from the server
+                displayUserMessage(data.text);
+                displayBotResponse(data.response);
+                
+                
+                
+                // Perform any additional processing or display the response in the UI
+            })
+            .catch(error => {
+                console.error('Error sending audio:', error);
+            });
+        }
+
+        document.getElementById('sendTextButton').addEventListener('click', function() {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+        
+            if (text !== '') {
+                // Clear the input field
+                textInput.value = '';
+        
+                // Display user message
+                displayUserMessage(text);
+        
+                // Send text to Django using AJAX
+                sendTextData(text);
+            }
+        });
+        
+        function sendTextData(text) {
+            const formData = new FormData();
+            formData.append('text', text);
+        
+            // Access the CSRF token input
+            const csrfTokenInput = document.getElementsByName('csrfmiddlewaretoken')[0];
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+        
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from the server
+                clear();
+             
+                displayBotResponse(data.response);
+        
+                // Perform any additional processing or display the response in the UI
+            })
+            .catch(error => {
+                console.error('Error sending text:', error);
+            });
+        }
+        
+        const messagesContainer = document.querySelector('.chatbox__messages');
+
+        function displayUserMessage(message) {
+            displayMessage('User', message);
+        }
+        
+        function displayBotResponse(response) {
+            displayMessage('Bot', response);
+            if(isSpeakerOn==true){
+                speakResponse(response); 
+            }
+            
+        }
+        
+        function displayMessage(speaker, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('messages__item');
+            
+            if (speaker === 'Bot') {
+                messageElement.classList.add('messages__item--visitor');
+            } else {
+                messageElement.classList.add('messages__item--operator');
+            }
+        
+            messageElement.textContent = message;
+            
+            // Insert messages at the top
+            messagesContainer.insertBefore(messageElement, messagesContainer.firstChild);
+        
+            // Scroll to the bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function speakResponse(text) {
+            // Adjust this selector based on your HTML structure
+           const responseText = text
+       
+           const synthesis = window.speechSynthesis;
+           const utterance = new SpeechSynthesisUtterance(responseText);
+           utterance.lang=lang;
+           utterance.rate = 0.8;
+           console.log(utterance.lang); 
+           synthesis.speak(utterance);
+         
+       }
+   
+        document.getElementById('textInput').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('sendTextButton').click();
+            }
+        });
+
+
+    </script>
+    <script src={%static "app.js"%}></script>
+  
+</body>
+</html>

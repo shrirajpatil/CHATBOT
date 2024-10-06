@@ -1,0 +1,235 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href={%static "chat.css" %}>
+    <link rel="stylesheet" href={%static "style.css" %}>
+    <link rel="stylesheet" href={%static "typing.css" %}>
+    <link rel="stylesheet" href={%static "back.css" %}>
+    <!-- Add this line to include the FontAwesome library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    <title>Document</title>
+    <style>
+        /* Add this style to make the image round */
+        .chatbox__image--header img {
+            border-radius: 50%;
+            width: 100%; /* Ensure the image takes the full width of its container */
+            height: auto; /* Maintain the aspect ratio of the image */
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+        <ul class="navbar__list">
+            <li class="navbar__item"><a href="index.html">Home</a></li>
+            <li class="navbar__item"><a href="NRSC.html">NRSC</a></li>
+            <li class="navbar__item"><a href="Application_Sectors.html">Application Sectors</a></li>
+            <li class="navbar__item"><a href="bhuvan_collectors.html">Bhuvan Collectors</a></li>
+            <li class="navbar__item"><a href="search.html">Search</a></li>
+            <li class="navbar__item"><a href="store.html">Bhuvan Store</a></li>
+            <li class="navbar__item"><a href="contact.html">Contact Us</a></li>
+            <li class="navbar__item"><a href="newsletter.html">Newsletter</a></li>
+            <li class="navbar__item"><a href="wiki.html">WIKI</a></li>
+            <!-- Add more options as needed -->
+        </ul>
+    </nav>
+    <div class="chatbox">
+        <div class="chatbox__support">
+            <div class="chatbox__header">
+                <div class="chatbox__image--header">
+                    <img src={%static "image/image4.png"%} alt="image">
+                </div>
+            </div>
+            <div class="chatbox__messages">
+                <div>
+                   
+                    <div class="messages__item messages__item--typing">
+                        <span lang="hi" dir="auto">नमस्ते, मैं ISRO BOT हूँ |</span>
+                        
+                    </div>
+                </div>
+                <!-- Your chat messages go here -->
+            </div>
+            <div class="chatbox__footer">
+                
+                <form method="post" id="textForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="text" id="textInput" placeholder="Write a message...">
+                    <button type="button" id="sendTextButton" style="background: none; border: none;">
+                        <i class="fas fa-paper-plane"style="color: white;font-size: 24px;"></i>
+                    </button>
+                </form>
+               
+                <!-- Your chat input field goes here -->
+                <form method="post" id="sound" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <i id="recordButton" class="fas fa-microphone" style="cursor: pointer;color: white;font-size: 24px;"></i>
+                    <input type="file" name="audio" accept="audio/*" style="display:none;" id="audioInput"/>
+                    
+                        
+                    <input type="submit" value="Send" style="display:none;">
+                </form>
+            </div>
+        </div>
+        <div class="chatbox__button">
+            <button>Branch-1</button>
+        </div>
+    </div>
+
+    <script>
+        
+        const recordButton = document.getElementById('recordButton');
+ 
+        recordButton.addEventListener('click', startRecording);
+        
+        function startRecording() {
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    const mediaRecorder = new MediaRecorder(stream);
+                    const audioChunks = [];
+        
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            audioChunks.push(event.data);
+                        }
+                    };
+        
+                    mediaRecorder.onstop = () => {
+                        
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        sendAudioData(audioBlob);
+                    };
+        
+                    mediaRecorder.start();
+        
+                    setTimeout(() => {
+                        mediaRecorder.stop();
+                    }, 5000); // Record for 5 seconds (adjust as needed)
+                })
+                .catch(error => {
+                    
+                    console.error('Error accessing microphone:', error);
+                });
+        }
+        
+        function sendAudioData(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob);
+        
+            // Access the CSRF token input
+            const csrfTokenInput = document.getElementsByName('csrfmiddlewaretoken')[0];
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+        
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from the server
+                console.log('Server Response:', data);
+                displayUserMessage(data.text);
+                displayBotResponse(data.response);
+                
+                
+                
+                // Perform any additional processing or display the response in the UI
+            })
+            .catch(error => {
+                console.error('Error sending audio:', error);
+            });
+        }
+
+        document.getElementById('sendTextButton').addEventListener('click', function() {
+            const textInput = document.getElementById('textInput');
+            const text = textInput.value.trim();
+        
+            if (text !== '') {
+                // Clear the input field
+                textInput.value = '';
+        
+                // Display user message
+                displayUserMessage(text);
+        
+                // Send text to Django using AJAX
+                sendTextData(text);
+            }
+        });
+        
+        function sendTextData(text) {
+            const formData = new FormData();
+            formData.append('text', text);
+        
+            // Access the CSRF token input
+            const csrfTokenInput = document.getElementsByName('csrfmiddlewaretoken')[0];
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+        
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Handle the response from the server
+                console.log('Server Response:', data);
+                displayBotResponse(data.response);
+        
+                // Perform any additional processing or display the response in the UI
+            })
+            .catch(error => {
+                console.error('Error sending text:', error);
+            });
+        }
+        
+        const messagesContainer = document.querySelector('.chatbox__messages');
+
+        function displayUserMessage(message) {
+            displayMessage('User', message);
+        }
+        
+        function displayBotResponse(response) {
+            displayMessage('Bot', response);
+        }
+        
+        function displayMessage(speaker, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('messages__item');
+        
+            if (speaker === 'Bot') {
+                messageElement.classList.add('messages__item--visitor');
+            } else {
+                messageElement.classList.add('messages__item--operator');
+            }
+        
+            messageElement.textContent = message;
+        
+            // Insert messages at the top
+            messagesContainer.insertBefore(messageElement, messagesContainer.firstChild);
+        
+            // Scroll to the bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+    </script>
+    <script>
+        document.getElementById('textInput').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('sendTextButton').click();
+            }
+        });
+    </script>
+    <script src={%static "app.js"%}></script>
+  
+</body>
+</html>
